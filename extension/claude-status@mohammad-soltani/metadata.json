@@ -1,0 +1,8 @@
+{
+  "uuid": "claude-status@mohammad-soltani",
+  "name": "Claude Status",
+  "description": "A top-bar badge for Claude Code: see when Claude is thinking, needs your approval, or is done, and approve requests right from the top bar.",
+  "shell-version": ["45", "46", "47", "48", "49"],
+  "url": "https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools",
+  "version": 2
+}

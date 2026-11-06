@@ -1,0 +1,545 @@
+#!/usr/bin/env python3
+"""Claude Status Setup — the graphical installer for the per-user part.
+
+The .deb puts the extension and hook on the system. This wizard connects them
+to *your* account: it registers the hooks in ~/.claude/settings.json, turns the
+extension on, saves your preferences and installs an optional Persian font.
+
+    claude-status-setup              open the wizard
+    claude-status-setup --first-run  open it only if setup hasn't been done yet
+"""
+import glob
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
+
+APP_ID = "io.github.mohammad_soltani.ClaudeStatus"
+UUID = "claude-status@mohammad-soltani"
+VERSION = "1.0.1"
+AUTHOR_URL = "https://github.com/mohammad-mohammad-soltani"
+REPO_URL = "https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools"
+
+SHARE = os.environ.get("CLAUDE_STATUS_SHARE", "/usr/share/claude-status")
+HOOK = os.path.join(SHARE, "claude-status-hook.py")
+ICON = os.path.join(SHARE, "claude-status.svg")
+HOME = os.path.expanduser("~")
+CLAUDE_DIR = os.environ.get("CLAUDE_CONFIG_DIR", os.path.join(HOME, ".claude"))
+SETTINGS = os.path.join(CLAUDE_DIR, "settings.json")
+CONFIG = os.path.join(GLib.get_user_config_dir(), "claude-status")
+DONE_MARK = os.path.join(CONFIG, "setup-done")
+PREFS = os.path.join(GLib.get_user_cache_dir(), "claude-status", "prefs.json")
+FONT_DIR = os.path.join(GLib.get_user_data_dir(), "fonts", "claude-status")
+
+HOOK_EVENTS = {"SessionStart": 5, "SessionEnd": 5, "UserPromptSubmit": 5, "PreToolUse": 5,
+               "PostToolUse": 5, "Notification": 5, "Stop": 5, "PermissionRequest": 120}
+
+CSS = b"""
+@define-color accent_bg_color #e06a35;
+@define-color accent_color #e8784a;
+@define-color accent_fg_color #ffffff;
+@define-color destructive_bg_color #d63b35;
+
+.hero image { -gtk-icon-shadow: 0 16px 36px alpha(#e06a35, .45); }
+.hero-title { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; }
+.hero-sub { font-size: 15px; opacity: .72; }
+.feature-icon {
+  background: alpha(@accent_bg_color, .14);
+  color: @accent_color;
+  border-radius: 12px;
+  padding: 9px;
+}
+.feature-title { font-weight: 700; }
+.step-title { font-size: 24px; font-weight: 800; }
+.step-sub { opacity: .7; }
+.pill-ok { background: alpha(#2ec27e, .16); color: #26a269; border-radius: 99px; padding: 2px 10px; font-weight: 700; font-size: 12px; }
+.pill-warn { background: alpha(#e5a50a, .18); color: #c88800; border-radius: 99px; padding: 2px 10px; font-weight: 700; font-size: 12px; }
+.pill-bad { background: alpha(#d63b35, .16); color: #d63b35; border-radius: 99px; padding: 2px 10px; font-weight: 700; font-size: 12px; }
+.big-button { padding: 10px 28px; border-radius: 99px; font-weight: 700; }
+.credit, .credit label { font-size: 12px; color: alpha(@window_fg_color, .5); text-decoration: none; }
+.credit:hover label { color: @accent_color; }
+.done-ring {
+  background: radial-gradient(circle, alpha(#2ec27e, .22) 0%, alpha(#2ec27e, 0) 70%);
+  border-radius: 999px;
+  padding: 18px;
+}
+"""
+
+
+# ---------------------------------------------------------------- environment checks
+def run(cmd):
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=8)
+    except Exception:
+        return None
+
+
+def gnome_version():
+    r = run(["gnome-shell", "--version"])
+    if not r or r.returncode:
+        return 0
+    try:
+        return int("".join(ch for ch in r.stdout.split()[-1].split(".")[0] if ch.isdigit()))
+    except Exception:
+        return 0
+
+
+def find_claude():
+    found = shutil.which("claude")
+    if found:
+        return found
+    cands = [f"{HOME}/.local/bin/claude", f"{HOME}/.claude/local/claude", "/usr/local/bin/claude"]
+    for root in (".vscode", ".vscode-server", ".cursor", ".vscode-oss"):
+        bins = glob.glob(f"{HOME}/{root}/extensions/anthropic.claude-code-*/resources/native-binary/claude")
+        cands += sorted(bins, reverse=True)
+    return next((c for c in cands if os.access(c, os.X_OK)), None)
+
+
+def extension_state():
+    """'enabled', 'disabled', 'unknown-to-shell' or 'missing'."""
+    r = run(["gnome-extensions", "info", UUID])
+    if r and r.returncode == 0:
+        state = next((l.split(":", 1)[1].strip() for l in r.stdout.splitlines() if l.strip().lower().startswith("state")), "")
+        return "enabled" if state.upper() in ("ENABLED", "ACTIVE") else "disabled"
+    local = os.path.join(GLib.get_user_data_dir(), "gnome-shell", "extensions", UUID)
+    system = f"/usr/share/gnome-shell/extensions/{UUID}"
+    return "unknown-to-shell" if os.path.isdir(system) or os.path.isdir(local) else "missing"
+
+
+def hooks_registered():
+    try:
+        with open(SETTINGS, encoding="utf-8") as f:
+            return "claude-status-hook.py" in f.read()
+    except OSError:
+        return False
+
+
+# ---------------------------------------------------------------- setup actions
+def write_hooks(enable_approvals=True, remove=False):
+    cfg = {}
+    if os.path.exists(SETTINGS):
+        with open(SETTINGS, encoding="utf-8") as f:
+            txt = f.read().strip()
+        cfg = json.loads(txt) if txt else {}
+        shutil.copy2(SETTINGS, SETTINGS + ".bak-claude-status")
+    hooks = cfg.setdefault("hooks", {})
+    for ev in list(hooks):
+        for g in hooks[ev]:
+            g["hooks"] = [h for h in g.get("hooks", []) if "claude-status-hook.py" not in h.get("command", "")]
+        hooks[ev] = [g for g in hooks[ev] if g.get("hooks")]
+        if not hooks[ev]:
+            del hooks[ev]
+    if not remove:
+        for ev, timeout in HOOK_EVENTS.items():
+            if ev == "PermissionRequest" and not enable_approvals:
+                continue
+            # the guard keeps Claude Code quiet if the package is ever removed
+            cmd = f'test -f "{HOOK}" && python3 "{HOOK}" {ev} || true'
+            entry = {"hooks": [{"type": "command", "command": cmd, "timeout": timeout}]}
+            if ev in ("PreToolUse", "PostToolUse", "PermissionRequest", "Notification"):
+                entry["matcher"] = "*"
+            hooks.setdefault(ev, []).append(entry)
+    if not hooks:
+        cfg.pop("hooks", None)
+    os.makedirs(CLAUDE_DIR, exist_ok=True)
+    tmp = SETTINGS + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    os.replace(tmp, SETTINGS)
+
+
+def enable_extension():
+    r = run(["gnome-extensions", "enable", UUID])
+    if r and r.returncode == 0:
+        return True
+    # the shell doesn't know it yet (installed this session): enable for next login
+    s = Gio.Settings.new("org.gnome.shell")
+    current = list(s.get_strv("enabled-extensions"))
+    if UUID not in current:
+        s.set_strv("enabled-extensions", current + [UUID])
+    s.set_boolean("disable-user-extensions", False)
+    return False
+
+
+def save_prefs(popups, auto_pause):
+    os.makedirs(os.path.dirname(PREFS), exist_ok=True)
+    prefs = {}
+    try:
+        with open(PREFS, encoding="utf-8") as f:
+            prefs = json.load(f)
+    except Exception:
+        pass
+    prefs["mute"] = not popups
+    prefs["autoPause"] = auto_pause
+    with open(PREFS, "w", encoding="utf-8") as f:
+        json.dump(prefs, f)
+
+
+def install_font(path):
+    os.makedirs(FONT_DIR, exist_ok=True)
+    shutil.copy2(path, FONT_DIR)
+    run(["fc-cache", "-f", FONT_DIR])
+
+
+# ---------------------------------------------------------------- UI helpers
+def label(text, css=None, xalign=0.5, wrap=True, **kw):
+    l = Gtk.Label(label=text, xalign=xalign, wrap=wrap, justify=Gtk.Justification.CENTER if xalign == 0.5 else Gtk.Justification.LEFT, **kw)
+    for c in (css or "").split():
+        l.add_css_class(c)
+    return l
+
+
+def logo(size):
+    if os.path.exists(ICON):
+        img = Gtk.Image.new_from_file(ICON)
+    else:
+        img = Gtk.Image.new_from_icon_name(APP_ID)
+    img.set_pixel_size(size)
+    return img
+
+
+def pill(text, kind):
+    p = Gtk.Label(label=text, valign=Gtk.Align.CENTER)
+    p.add_css_class(f"pill-{kind}")
+    return p
+
+
+class SetupWindow(Adw.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Claude Status Setup", default_width=660, default_height=760)
+        self.set_size_request(380, 560)
+        self.claude = find_claude()
+        self.gnome = gnome_version()
+        self.font_path = None
+
+        view = Adw.ToolbarView()
+        header = Adw.HeaderBar()
+        header.set_title_widget(Adw.WindowTitle(title="Claude Status", subtitle=f"Setup · {VERSION}"))
+        self.back = Gtk.Button(icon_name="go-previous-symbolic", visible=False, tooltip_text="Back")
+        self.back.connect("clicked", lambda *_: self.go(self.page - 1))
+        header.pack_start(self.back)
+        view.add_top_bar(header)
+
+        self.carousel = Adw.Carousel(interactive=False, vexpand=True, allow_long_swipes=False)
+        self.carousel.connect("page-changed", self.on_page)
+        self.pages = [self.page_welcome(), self.page_check(), self.page_options(), self.page_install(), self.page_done()]
+        for p in self.pages:
+            self.carousel.append(p)
+        view.set_content(self.carousel)
+
+        dots = Adw.CarouselIndicatorDots(carousel=self.carousel, margin_bottom=14, margin_top=4)
+        view.add_bottom_bar(dots)
+        self.toasts = Adw.ToastOverlay(child=view)
+        self.set_content(self.toasts)
+        self.page = 0
+
+    # ---------------------------------------------------------- navigation
+    def go(self, i):
+        i = max(0, min(i, len(self.pages) - 1))
+        self.carousel.scroll_to(self.pages[i], True)
+
+    def on_page(self, _c, i):
+        self.page = i
+        self.back.set_visible(0 < i < 3)
+        if i == 1:
+            self.refresh_checks()
+
+    def scroller(self, child):
+        clamp = Adw.Clamp(maximum_size=520, child=child, margin_start=20, margin_end=20)
+        return Gtk.ScrolledWindow(child=clamp, hscrollbar_policy=Gtk.PolicyType.NEVER, vexpand=True, hexpand=True)
+
+    def nav(self, primary, on_click, secondary=None, on_secondary=None):
+        box = Gtk.Box(spacing=10, halign=Gtk.Align.CENTER, margin_top=22, margin_bottom=10)
+        if secondary:
+            b2 = Gtk.Button(label=secondary)
+            b2.add_css_class("big-button")
+            b2.add_css_class("flat")
+            b2.connect("clicked", on_secondary)
+            box.append(b2)
+        b = Gtk.Button(label=primary)
+        b.add_css_class("big-button")
+        b.add_css_class("suggested-action")
+        b.connect("clicked", on_click)
+        box.append(b)
+        return box, b
+
+    # ---------------------------------------------------------- 1. welcome
+    def page_welcome(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=28, margin_bottom=10)
+        hero = Gtk.Box(halign=Gtk.Align.CENTER)
+        hero.add_css_class("hero")
+        hero.append(logo(132))
+        box.append(hero)
+        box.append(label("Claude Status", "hero-title", margin_top=18))
+        box.append(label("Know what Claude is doing, without looking.", "hero-sub"))
+
+        group = Adw.PreferencesGroup(margin_top=22)
+        for icon, title, sub in [
+            ("emblem-system-symbolic", "Live status in the top bar", "Thinking, needs approval, done: with the project, model and a timer."),
+            ("emblem-ok-symbolic", "Approve from the top bar", "Allow, Always allow or Deny without switching windows."),
+            ("preferences-desktop-locale-symbolic", "Persian translation", "Translate questions and options with one tap."),
+            ("security-high-symbolic", "Claude IP Safety", "Pauses every session if your IP is in an unsupported region."),
+        ]:
+            row = Adw.ActionRow(title=title, subtitle=sub)
+            ic = Gtk.Image.new_from_icon_name(icon)
+            ic.add_css_class("feature-icon")
+            ic.set_pixel_size(18)
+            row.add_prefix(ic)
+            group.add(row)
+        box.append(group)
+        nav, _ = self.nav("Get started", lambda *_: self.go(1))
+        box.append(nav)
+        credit = Gtk.LinkButton(uri=AUTHOR_URL, label="Powered by mohammad mohammad soltani")
+        credit.add_css_class("credit")
+        box.append(credit)
+        return self.scroller(box)
+
+    # ---------------------------------------------------------- 2. checks
+    def page_check(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=26)
+        box.append(label("Checking your system", "step-title"))
+        box.append(label("Claude Status needs GNOME 45 or newer and Claude Code.", "step-sub"))
+        self.check_group = Adw.PreferencesGroup(margin_top=18)
+        box.append(self.check_group)
+        self.check_rows = []
+        self.check_nav, self.check_next = self.nav("Continue", lambda *_: self.go(2))
+        box.append(self.check_nav)
+        return self.scroller(box)
+
+    def refresh_checks(self):
+        for r in self.check_rows:
+            self.check_group.remove(r)
+        self.check_rows = []
+        ext = extension_state()
+        checks = [
+            ("GNOME Shell", f"Version {self.gnome}" if self.gnome else "Not found",
+             "ok" if self.gnome >= 45 else "bad", "Ready" if self.gnome >= 45 else "Needs 45+"),
+            ("Claude Code", self.claude or "Install the CLI or the VS Code extension",
+             "ok" if self.claude else "warn", "Found" if self.claude else "Not found"),
+            ("Top-bar extension", {"enabled": "Installed and running", "disabled": "Installed",
+                                   "unknown-to-shell": "Installed, loads after you log in again",
+                                   "missing": "Missing: reinstall the package"}[ext],
+             "bad" if ext == "missing" else "ok", "Missing" if ext == "missing" else "Installed"),
+            ("Hook", HOOK if os.path.exists(HOOK) else "Missing: reinstall the package",
+             "ok" if os.path.exists(HOOK) else "bad", "Installed" if os.path.exists(HOOK) else "Missing"),
+        ]
+        for title, sub, kind, text in checks:
+            row = Adw.ActionRow(title=title, subtitle=GLib.markup_escape_text(sub))
+            row.add_suffix(pill(text, kind))
+            self.check_group.add(row)
+            self.check_rows.append(row)
+        self.check_next.set_sensitive(all(k != "bad" for _, _, k, _ in checks))
+
+    # ---------------------------------------------------------- 3. options
+    def page_options(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=26)
+        box.append(label("Choose what you want", "step-title"))
+        box.append(label("You can change these later from the badge's panel.", "step-sub"))
+
+        g1 = Adw.PreferencesGroup(title="Requests", margin_top=18)
+        self.sw_approve = Adw.SwitchRow(title="Approve from the top bar",
+                                        subtitle="Claude waits up to 60 s for your answer on the card, then asks in the terminal", active=True)
+        self.sw_popup = Adw.SwitchRow(title="Pop up requests automatically",
+                                      subtitle="Open the card as soon as Claude needs you", active=True)
+        g1.add(self.sw_approve)
+        g1.add(self.sw_popup)
+        box.append(g1)
+
+        g2 = Adw.PreferencesGroup(title="Claude IP Safety", margin_top=12,
+                                  description="Your IP is checked with ipwho.is and ipinfo.io.")
+        self.sw_ip = Adw.SwitchRow(title="Pause sessions on unsupported IP",
+                                   subtitle="Paused sessions resume exactly where they stopped", active=True)
+        g2.add(self.sw_ip)
+        box.append(g2)
+
+        g3 = Adw.PreferencesGroup(title="Persian", margin_top=12)
+        tr = Adw.ActionRow(title="Translation with Claude Haiku",
+                           subtitle="Uses your Claude Code login" if self.claude else "Needs Claude Code")
+        tr.add_suffix(pill("Ready" if self.claude else "Unavailable", "ok" if self.claude else "warn"))
+        g3.add(tr)
+        self.font_row = Adw.ActionRow(title="Persian font", subtitle="Optional: choose IRANSansX or another font file")
+        pick = Gtk.Button(label="Choose…", valign=Gtk.Align.CENTER)
+        pick.connect("clicked", self.pick_font)
+        self.font_row.add_suffix(pick)
+        g3.add(self.font_row)
+        box.append(g3)
+
+        nav, _ = self.nav("Install", lambda *_: self.start_install())
+        box.append(nav)
+        return self.scroller(box)
+
+    def pick_font(self, _b):
+        dlg = Gtk.FileDialog(title="Choose a font")
+        f = Gtk.FileFilter()
+        f.set_name("Fonts")
+        for p in ("*.ttf", "*.otf", "*.woff2", "*.woff"):
+            f.add_pattern(p)
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(f)
+        dlg.set_filters(filters)
+
+        def done(d, res):
+            try:
+                file = d.open_finish(res)
+            except GLib.Error:
+                return
+            self.font_path = file.get_path()
+            self.font_row.set_subtitle(os.path.basename(self.font_path))
+        dlg.open(self, None, done)
+
+    # ---------------------------------------------------------- 4. install
+    def page_install(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=26)
+        self.install_title = label("Setting things up", "step-title")
+        box.append(self.install_title)
+        box.append(label("This only takes a moment.", "step-sub"))
+        self.progress = Gtk.ProgressBar(margin_top=20, margin_bottom=6)
+        box.append(self.progress)
+        self.step_group = Adw.PreferencesGroup(margin_top=12)
+        box.append(self.step_group)
+        return self.scroller(box)
+
+    def start_install(self):
+        self.go(3)
+        steps = [
+            ("Connect to Claude Code", "Register hooks in ~/.claude/settings.json",
+             lambda: write_hooks(enable_approvals=self.sw_approve.get_active())),
+            ("Save your preferences", "Pop-ups and Claude IP Safety",
+             lambda: save_prefs(self.sw_popup.get_active(), self.sw_ip.get_active())),
+        ]
+        if self.font_path:
+            steps.append(("Install the Persian font", os.path.basename(self.font_path), lambda: install_font(self.font_path)))
+        steps.append(("Turn on the top-bar badge", "Enable the GNOME Shell extension", self._enable))
+        steps.append(("Finish", "Remember that setup is done", self._mark_done))
+
+        rows = []
+        for title, sub, _ in steps:
+            row = Adw.ActionRow(title=title, subtitle=sub)
+            spin = Gtk.Spinner(valign=Gtk.Align.CENTER)
+            row.add_suffix(spin)
+            row._spin = spin
+            self.step_group.add(row)
+            rows.append(row)
+
+        self.failed = None
+
+        def step(i):
+            if i >= len(steps):
+                self.progress.set_fraction(1)
+                GLib.timeout_add(450, lambda: (self.finish(), False)[1])
+                return False
+            row = rows[i]
+            row._spin.start()
+
+            def do():
+                try:
+                    steps[i][2]()
+                    ok = True
+                except Exception as e:  # show the error, keep going
+                    ok = False
+                    self.failed = f"{steps[i][0]}: {e}"
+                row._spin.stop()
+                row.remove(row._spin)
+                icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic" if ok else "dialog-warning-symbolic")
+                icon.add_css_class("success" if ok else "error")
+                row.add_suffix(icon)
+                self.progress.set_fraction((i + 1) / len(steps))
+                GLib.timeout_add(260, lambda: (step(i + 1), False)[1])
+                return False
+            GLib.timeout_add(420, do)
+            return False
+        step(0)
+
+    def _enable(self):
+        self.live = enable_extension()
+
+    def _mark_done(self):
+        os.makedirs(CONFIG, exist_ok=True)
+        with open(DONE_MARK, "w") as f:
+            f.write(VERSION)
+
+    # ---------------------------------------------------------- 5. done
+    def page_done(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, margin_top=34)
+        ring = Gtk.Box(halign=Gtk.Align.CENTER)
+        ring.add_css_class("done-ring")
+        ic = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
+        ic.set_pixel_size(72)
+        ic.add_css_class("success")
+        ring.append(ic)
+        box.append(ring)
+        self.done_title = label("You're all set", "hero-title", margin_top=12)
+        box.append(self.done_title)
+        self.done_text = label("", "hero-sub")
+        box.append(self.done_text)
+
+        self.tips = Adw.PreferencesGroup(margin_top=22)
+        for title, sub in [("Restart Claude Code", "Open sessions load the hooks when they start."),
+                           ("Click the badge", "See every session, Claude IP Safety and your settings.")]:
+            self.tips.add(Adw.ActionRow(title=title, subtitle=sub))
+        box.append(self.tips)
+
+        self.done_nav = Gtk.Box(spacing=10, halign=Gtk.Align.CENTER, margin_top=22)
+        box.append(self.done_nav)
+        gh = Gtk.LinkButton(uri=REPO_URL, label="Project on GitHub")
+        gh.add_css_class("credit")
+        box.append(gh)
+        return self.scroller(box)
+
+    def finish(self):
+        for c in list(self.done_nav):
+            self.done_nav.remove(c)
+        if self.failed:
+            self.done_title.set_label("Almost there")
+            self.done_text.set_label(f"One step didn't work: {self.failed}")
+        elif getattr(self, "live", False):
+            self.done_text.set_label("The badge is in your top bar now.")
+        else:
+            self.done_text.set_label("Log out and back in to see the badge in your top bar.")
+
+        def btn(text, cb, suggested=False):
+            b = Gtk.Button(label=text)
+            b.add_css_class("big-button")
+            b.add_css_class("suggested-action" if suggested else "flat")
+            b.connect("clicked", cb)
+            self.done_nav.append(b)
+
+        if getattr(self, "live", False) or self.failed:
+            btn("Close", lambda *_: self.close(), True)
+        else:
+            btn("Later", lambda *_: self.close())
+            btn("Log out now", lambda *_: (run(["gnome-session-quit", "--logout"]), self.close()), True)
+        self.go(4)
+
+
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.DEFAULT)
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider,
+                                                  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    def do_command_line(self, cmd):
+        args = cmd.get_arguments()[1:]
+        if "--first-run" in args and (os.path.exists(DONE_MARK) or hooks_registered()):
+            return 0
+        win = self.props.active_window or SetupWindow(self)
+        win.present()
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(App().run(sys.argv))

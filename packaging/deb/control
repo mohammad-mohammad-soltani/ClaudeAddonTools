@@ -1,0 +1,19 @@
+Package: claude-status
+Version: @VERSION@
+Section: gnome
+Priority: optional
+Architecture: all
+Depends: python3, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1 (>= 1.4), gnome-shell (>= 45), gir1.2-soup-3.0
+Recommends: fonts-vazirmatn
+Installed-Size: @SIZE@
+Maintainer: mohammad mohammad soltani <azizsalehi50@gmail.com>
+Homepage: https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools
+Description: Top-bar badge for Claude Code on GNOME
+ Claude Status shows when Claude Code is thinking, needs your approval
+ or is done, right in the GNOME top bar. Approve permission requests from
+ a card that drops out of the badge, see every session at a glance,
+ translate questions to Persian, and pause all sessions automatically
+ when your IP is in a region Claude doesn't support.
+ .
+ After installing, open "Claude Status" from your apps (it also opens on
+ your next login) to connect it to your Claude Code account.

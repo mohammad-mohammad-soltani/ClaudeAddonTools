@@ -1,0 +1,214 @@
+/* Claude Status — GNOME Shell styles (St CSS subset) */
+
+/* ---------------------------------------------------------------- badge */
+.cs-button { -natural-hpadding: 4px; -minimum-hpadding: 4px; }
+.cs-button:hover, .cs-button:active, .cs-button:checked, .cs-button:focus { background-color: transparent; box-shadow: none; }
+
+.cs-badge {
+  height: 24px;
+  padding: 0 10px 0 6px;
+  border-radius: 999px;
+  spacing: 7px;
+  background-color: #e06a35;
+  transition-duration: 250ms;
+}
+.cs-button:hover .cs-badge, .cs-badge.open { background-color: #ea7843; }
+.cs-badge.idle { background-color: transparent; padding: 0 4px; }
+.cs-button:hover .cs-badge.idle { background-color: rgba(255,255,255,0.1); }
+
+.cs-badge-icon { width: 20px; height: 20px; }
+
+.cs-state   { color: #ffffff; font-size: 12.5px; font-weight: bold; }
+.cs-project { color: rgba(255,255,255,0.84); font-size: 12px; }
+.cs-model {
+  color: #ffffff; font-size: 10.5px; font-weight: 600;
+  padding: 0 7px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.55);
+}
+.cs-time {
+  color: #ffffff; font-family: monospace; font-size: 10.5px;
+  padding: 1px 6px; border-radius: 6px;
+  background-color: rgba(0,0,0,0.16);
+}
+.cs-count {
+  color: #b5573c; background-color: #ffffff;
+  font-size: 10px; font-weight: bold;
+  padding: 0 6px; border-radius: 999px;
+}
+
+/* status dot in the corner of the Claude mark */
+.cs-mark {
+  width: 11px; height: 11px; border-radius: 999px;
+  font-size: 7.5px; font-weight: bold; text-align: center;
+  color: #1b130e;
+  margin: 0 -3px -2px 0;
+}
+.cs-mark.waiting { background-color: #ffc94d; border: 1.5px solid #e06a35; }
+.cs-mark.done    { background-color: #5ee69a; border: 1.5px solid #e06a35; }
+
+/* ---------------------------------------------------------------- panel */
+.cs-menu .popup-menu-content, .cs-menu-box {
+  background-color: #1c1c1f;
+  border-radius: 16px;
+  min-width: 330px;
+  padding: 6px;
+}
+.cs-head { padding: 10px 12px 6px; spacing: 10px; }
+.cs-head-title { color: #ededee; font-size: 14px; font-weight: 600; }
+.cs-head-sub   { color: #9b9ba1; font-size: 11.5px; }
+
+.cs-chip-row { padding: 2px 12px 8px; }
+.cs-chips { spacing: 6px; }
+.cs-chip { spacing: 6px; padding: 3px 9px 3px 7px; border-radius: 999px; font-size: 11.5px; }
+.cs-chip-dot { width: 7px; height: 7px; border-radius: 999px; }
+.cs-chip.waiting  { background-color: rgba(242,179,61,0.14); color: #ffe2a1; }
+.cs-chip.waiting .cs-chip-dot  { background-color: #f2b33d; }
+.cs-chip.thinking { background-color: rgba(224,122,90,0.16); color: #ffc2ad; }
+.cs-chip.thinking .cs-chip-dot { background-color: #e07a5a; }
+.cs-chip.done     { background-color: rgba(79,213,138,0.14); color: #c4f5d8; }
+.cs-chip.done .cs-chip-dot     { background-color: #4fd58a; }
+
+.cs-group { padding: 10px 12px 3px; }
+.cs-group .popup-menu-item-label, .cs-group StLabel { color: #8f8f96; font-size: 10.5px; font-weight: 600; }
+.cs-empty StLabel { color: #9b9ba1; font-size: 12px; }
+
+.cs-row { padding: 9px 10px; border-radius: 11px; spacing: 11px; }
+.cs-row.waiting { background-color: rgba(242,179,61,0.09); border: 1px solid rgba(242,179,61,0.3); }
+.cs-row-icon { width: 30px; height: 30px; border-radius: 9px; }
+.cs-row-icon.waiting  { background-color: rgba(242,179,61,0.16); }
+.cs-row-icon.thinking { background-color: rgba(224,122,90,0.16); }
+.cs-row-icon.done     { background-color: rgba(79,213,138,0.14); }
+.cs-row-icon.idle     { background-color: rgba(255,255,255,0.06); }
+.cs-row-icon .cs-mark { border-color: #1c1c1f; margin: 0 -3px -3px 0; }
+.cs-row-col   { spacing: 2px; }
+.cs-row-title { color: #ededee; font-size: 13.5px; font-weight: 600; }
+.cs-row-time  { color: #9b9ba1; font-family: monospace; font-size: 10.5px; }
+.cs-row-sub   { color: #9b9ba1; font-size: 11.5px; max-width: 260px; }
+.cs-row-cta   { color: #ffe2a1; font-size: 11px; padding-top: 3px; }
+
+.cs-credit { padding: 8px 0 6px; }
+.cs-credit-text { color: #6f6f75; font-size: 10.5px; }
+.cs-credit-name { color: #b4b4ba; font-size: 10.5px; font-weight: 600; }
+.cs-credit:hover .cs-credit-name, .cs-credit:focus .cs-credit-name { color: #ea7843; }
+
+/* ---------------------------------------------------------------- request card */
+.cs-card {
+  width: 370px;
+  background-color: #1d1b1a;
+  border-radius: 18px;
+  color: #f4f1ee;
+  font-size: 13.5px;
+}
+.cs-card-top {
+  background-color: #e06a35;
+  border-radius: 18px 18px 0 0;
+  padding: 13px 14px 12px 16px;
+  spacing: 12px;
+}
+.cs-card-logo { width: 34px; height: 34px; border-radius: 11px; background-color: rgba(255,255,255,0.18); }
+.cs-card-logo-icon { icon-size: 21px; }
+.cs-card-title { color: #ffffff; font-size: 14.5px; font-weight: bold; }
+.cs-card-sub   { color: rgba(255,255,255,0.86); font-size: 11.5px; }
+
+.cs-tr {
+  height: 26px; padding: 0 11px; border-radius: 999px;
+  background-color: rgba(255,255,255,0.2);
+  color: #ffffff; font-size: 12px; font-weight: bold;
+}
+.cs-tr:hover { background-color: rgba(255,255,255,0.3); }
+.cs-tr.on { background-color: #ffffff; color: #c95a2a; }
+.cs-tr.busy { background-color: rgba(255,255,255,0.12); }
+.cs-close { width: 26px; height: 26px; border-radius: 8px; color: rgba(255,255,255,0.85); font-size: 14px; }
+.cs-close:hover { background-color: rgba(255,255,255,0.16); color: #ffffff; }
+
+.cs-card-body { padding: 14px 16px 4px; spacing: 10px; }
+.cs-tool { color: #f19a6f; font-size: 10.5px; font-weight: bold; }
+.cs-q    { color: #ece6e1; font-size: 13.5px; }
+.cs-cmd {
+  font-family: monospace; font-size: 12px; color: #f6efe9;
+  background-color: #121110; border-radius: 10px; padding: 10px 12px;
+}
+.cs-cwd { font-family: monospace; font-size: 10.5px; color: #8f8a86; }
+
+.cs-opts { spacing: 6px; }
+.cs-opt { background-color: #262321; border-radius: 10px; padding: 9px 11px; spacing: 10px; }
+.cs-opt-n {
+  width: 20px; height: 20px; border-radius: 6px;
+  background-color: #e06a35; color: #ffffff;
+  font-size: 11px; font-weight: bold; text-align: center;
+}
+.cs-opt-text { color: #f1ebe6; font-size: 13px; }
+
+/* Persian text */
+.cs-fa { font-family: "IRANSansX", "Vazirmatn", "Noto Sans Arabic", sans-serif; }
+.cs-q.cs-fa { font-size: 14px; }
+.cs-opt-text.cs-fa { font-size: 13.5px; }
+
+.cs-actions { padding: 14px 16px 10px; spacing: 8px; }
+.cs-btn { border-radius: 11px; padding: 10px 0; font-size: 13px; font-weight: 600; }
+.cs-primary   { background-color: #e06a35; color: #ffffff; }
+.cs-primary:hover, .cs-primary:focus { background-color: #ea7843; }
+.cs-secondary { background-color: #2b2826; color: #f1ebe6; }
+.cs-secondary:hover, .cs-secondary:focus { background-color: #363230; }
+.cs-ghost     { color: #c9c2bd; }
+.cs-ghost:hover, .cs-ghost:focus { background-color: #2b2826; color: #ffffff; }
+.cs-btn:focus, .cs-tr:focus, .cs-close:focus, .cs-link:focus { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.85); }
+
+.cs-foot { padding: 0 16px 12px; font-size: 11px; color: #8f8a86; }
+.cs-link { color: #f19a6f; font-size: 11px; padding: 2px 4px; border-radius: 6px; }
+.cs-link:hover { color: #ffb38f; }
+
+.cs-bar-track { height: 3px; background-color: #2b2826; border-radius: 0 0 18px 18px; }
+.cs-bar { height: 3px; background-color: #e06a35; }
+
+/* ---------------------------------------------------------------- blocked (unsupported IP) */
+.cs-badge.blocked { background-color: #d63b35; }
+.cs-button:hover .cs-badge.blocked { background-color: #e04842; }
+.cs-mark.blocked { background-color: #ffffff; color: #d63b35; border: 1.5px solid #d63b35; }
+
+/* ---------------------------------------------------------------- IP safety (panel) */
+.cs-ip { padding: 4px 6px 2px; }
+.cs-ip-box { spacing: 7px; }
+.cs-ip-h { color: #8f8f96; font-size: 10.5px; font-weight: 600; padding-left: 6px; }
+.cs-ip-re { border-radius: 7px; padding: 4px 6px; color: #9b9ba1; }
+.cs-ip-re:hover, .cs-ip-re:focus { background-color: #252528; color: #ededee; }
+.cs-ip-card { background-color: #252528; border-radius: 11px; padding: 10px; spacing: 11px; }
+.cs-ip-card.bad { background-color: rgba(255,99,82,0.08); border: 1px solid rgba(255,99,82,0.4); }
+.cs-ip-flag { font-size: 18px; width: 30px; text-align: center; }
+.cs-ip-place { color: #ededee; font-size: 13.5px; font-weight: 600; }
+.cs-ip-sub { color: #9b9ba1; font-size: 11px; font-family: monospace; max-width: 210px; }
+.cs-ip-note { color: #9b9ba1; font-size: 11px; padding: 0 4px; max-width: 300px; }
+.cs-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.cs-pill.ok  { background-color: rgba(79,213,138,0.14); color: #8ff0b7; }
+.cs-pill.bad { background-color: rgba(255,99,82,0.16); color: #ff9a8c; }
+
+/* ---------------------------------------------------------------- IP alert */
+.cs-alert { width: 390px; background-color: #1d1919; }
+.cs-alert-top {
+  background-gradient-direction: horizontal;
+  background-gradient-start: #d63b35;
+  background-gradient-end: #b32a25;
+  border-radius: 18px 18px 0 0;
+  padding: 15px 14px 14px 16px;
+  spacing: 12px;
+}
+.cs-alert-shield { icon-size: 20px; color: #ffffff; }
+.cs-alert-body { padding: 16px 16px 4px; spacing: 11px; }
+.cs-alert-h { color: #ffffff; font-size: 16px; font-weight: bold; }
+.cs-alert-p { color: #d4cbc8; font-size: 13px; }
+.cs-alert-lh { color: #958c89; font-size: 10.5px; font-weight: 600; padding-top: 2px; }
+.cs-alert-row { spacing: 9px; font-size: 13px; color: #f1e8e6; padding: 3px 0; }
+.cs-alert-sq { color: #ff8f82; font-size: 9px; background-color: rgba(255,99,82,0.18); border-radius: 5px; padding: 2px 4px; }
+.cs-alert-was { color: #958c89; font-size: 11px; }
+.cs-outline { color: #f1e8e6; border: 1px solid rgba(255,255,255,0.2); }
+.cs-outline:hover, .cs-outline:focus { background-color: rgba(255,255,255,0.08); }
+.cs-white { background-color: #ffffff; color: #b32a25; }
+.cs-white:hover, .cs-white:focus { background-color: #ffe9e7; }
+
+/* ---------------------------------------------------------------- announcements */
+.cs-toast-text { color: #ffffff; font-size: 12.5px; font-weight: bold; }
+.cs-badge.toast.done { background-color: #26a269; }
+.cs-badge.toast.waiting { background-color: #f2b33d; }
+.cs-badge.toast.waiting .cs-toast-text { color: #2a1a05; }
+.cs-badge.toast .cs-mark.done { border-color: #26a269; }
+.cs-badge.toast .cs-mark.waiting { background-color: #ffffff; color: #b07a00; border-color: #f2b33d; }

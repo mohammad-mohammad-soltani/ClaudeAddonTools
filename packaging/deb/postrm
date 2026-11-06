@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+# Hooks in each user's ~/.claude/settings.json are guarded with `test -f`, so
+# Claude Code keeps working after removal. Users can remove them by running
+# "Claude Status" before uninstalling, or by deleting the entries by hand.
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+  command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+  command -v update-desktop-database >/dev/null && update-desktop-database -q /usr/share/applications || true
+fi
+exit 0

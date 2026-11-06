@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claude Status showcase</title>
+<!-- Renders the README images. Usage: docs/showcase/render.sh -->
+<style>
+@font-face{font-family:"IRANSansX";src:url(../../fonts/IRANSansXV.woff2) format("woff2");font-weight:100 900}
+:root{--o:#e06a35;--o2:#ea7843;--ink:#f4f1ee;--sub:#a59f9a;--card:#1d1b1a;--deep:#121110;--amber:#ffc94d;--green:#5ee69a;
+  --ui:"Ubuntu","IRANSansX",system-ui,sans-serif;--mono:"Ubuntu Mono","JetBrains Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;width:1600px;height:900px;overflow:hidden;font-family:var(--ui);color:var(--ink);background:#0f0d10}
+.scene{position:absolute;top:0;left:0;width:1600px;height:900px;display:none;padding:0 110px;align-items:center;gap:80px;
+  background:radial-gradient(900px 600px at 82% 18%,rgba(224,106,53,.30),transparent 60%),radial-gradient(800px 700px at 10% 100%,rgba(120,50,90,.35),transparent 60%),#100d12}
+.scene.on{display:flex}
+.copy{flex:0 0 520px}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#f3a27c;font-weight:500}
+.eyebrow svg{width:20px;height:20px}
+h1{font-size:62px;line-height:1.04;margin:22px 0 22px;font-weight:700;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--o2)}
+.lead{font-size:21px;line-height:1.55;color:#cfc8c2;margin:0 0 30px;max-width:30ch}
+.points{display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none}
+.points li{display:flex;gap:12px;align-items:center;font-size:18px;color:#e2dcd7}
+.points i{width:26px;height:26px;border-radius:8px;background:rgba(224,106,53,.18);display:grid;place-items:center;color:#f3a27c;font-style:normal;font-size:14px;font-weight:700}
+.foot{position:absolute;left:110px;bottom:46px;font-size:14px;color:#7d7672;letter-spacing:.04em}
+.foot b{color:#b9b1ab;font-weight:500}
+
+/* desktop mock */
+.desk{flex:1;height:640px;border-radius:22px;position:relative;overflow:hidden;
+  background:radial-gradient(120% 90% at 85% 0%,#6e2a4c 0%,#341838 42%,#141019 100%);box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06)}
+.bar{height:38px;background:#0b0b0d;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:14.5px;font-weight:500;position:relative}
+.ws{display:flex;gap:5px;padding-left:6px}.ws i{height:8px;width:8px;border-radius:9px;background:#777}.ws i.on{width:28px;background:#eee}
+.clock{position:absolute;left:40%;transform:translateX(-50%)}
+.right{display:flex;gap:12px;align-items:center}
+.sys{display:flex;gap:12px;padding:0 8px}.sys span{width:15px;height:13px;border-radius:3px;background:#eee;opacity:.9}
+
+.badge{display:inline-flex;align-items:center;gap:8px;height:27px;padding:0 11px 0 6px;border-radius:999px;background:var(--o);font-size:13px;white-space:nowrap}
+.badge.idle{background:transparent;padding:0 4px}
+.icon{position:relative;width:20px;height:20px;display:grid;place-items:center}
+.icon svg{width:16px;height:16px}
+.mk{position:absolute;right:-4px;bottom:-3px;width:12px;height:12px;border-radius:50%;font-size:8px;font-weight:700;color:#1b130e;display:grid;place-items:center;border:1.5px solid var(--o)}
+.mk.w{background:var(--amber)}.mk.d{background:var(--green)}
+.st{font-weight:700;color:#fff}.pj{color:rgba(255,255,255,.84);font-size:12.5px}
+.md{font-size:11px;font-weight:600;padding:0 7px;border-radius:999px;border:1px solid rgba(255,255,255,.55);line-height:17px}
+.tm{font-family:var(--mono);font-size:11.5px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.16)}
+.ct{font-size:10.5px;font-weight:700;color:#b5573c;background:#fff;border-radius:999px;padding:0 6px;line-height:16px}
+
+/* card */
+.card{position:absolute;top:48px;right:14px;width:400px;background:var(--card);border-radius:20px;overflow:hidden;font-size:14.5px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.top{background:var(--o);padding:15px 16px 14px;display:flex;gap:12px;align-items:center}
+.lg{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}.lg svg{width:23px;height:23px}
+.ttl{flex:1}.ttl b{display:block;font-size:16px;color:#fff}.ttl small{font-size:12.5px;color:rgba(255,255,255,.86)}
+.tr{align-self:flex-start;height:28px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font:700 13px/28px "IRANSansX",var(--ui)}
+.tr.on{background:#fff;color:#c95a2a}
+.x{align-self:flex-start;color:rgba(255,255,255,.85);font-size:15px;padding:4px 6px}
+.body{padding:15px 17px 4px;display:flex;flex-direction:column;gap:11px}
+.tool{font-size:11.5px;font-weight:700;letter-spacing:.08em;color:#f19a6f}
+.q{margin:0;line-height:1.55;color:#ece6e1}
+.q.fa,.opt.fa{direction:rtl;text-align:right;font-family:"IRANSansX",var(--ui);line-height:1.9}
+.cmd{font-family:var(--mono);font-size:13.5px;background:var(--deep);border-radius:11px;padding:11px 13px;color:#f6efe9}.cmd::before{content:"$ ";color:var(--o)}
+.cwd{font-family:var(--mono);font-size:12px;color:#8f8a86}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;gap:11px;align-items:center;background:#262321;border-radius:11px;padding:9px 12px;font-size:14px}
+.opt span{width:22px;height:22px;border-radius:7px;background:var(--o);color:#fff;display:grid;place-items:center;font:700 12px var(--ui);flex:none}
+.acts{display:flex;gap:9px;padding:15px 17px 11px}
+.acts div{flex:1;text-align:center;border-radius:12px;padding:11px 0;font-weight:600;font-size:14px}
+.p{background:var(--o);color:#fff}.s{background:#2b2826}.g{color:#c9c2bd;flex:.7!important}
+.cf{display:flex;justify-content:space-between;padding:0 17px 13px;font-size:12px;color:#8f8a86}.cf b{color:#f19a6f;font-weight:500}
+.pb{height:3px;background:#2b2826}.pb i{display:block;height:100%;width:62%;background:var(--o)}
+
+/* panel */
+.panel{position:absolute;top:48px;right:120px;width:380px;background:#1c1c1f;border-radius:18px;padding:6px;font-size:14.5px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.ph{display:flex;gap:11px;align-items:center;padding:12px 13px 8px}.ph svg{width:26px;height:26px}.ph b{display:block;font-size:15.5px}.ph small{color:#9b9ba1;font-size:12.5px}
+.chips{display:flex;gap:7px;padding:2px 13px 10px}
+.chip{display:flex;gap:7px;align-items:center;font-size:12.5px;padding:4px 10px 4px 8px;border-radius:999px}.chip i{width:8px;height:8px;border-radius:50%}
+.c1{background:rgba(242,179,61,.14);color:#ffe2a1}.c1 i{background:#f2b33d}.c2{background:rgba(224,122,90,.16);color:#ffc2ad}.c2 i{background:#e07a5a}.c3{background:rgba(79,213,138,.14);color:#c4f5d8}.c3 i{background:#4fd58a}
+.grp{font-size:11.5px;font-weight:600;letter-spacing:.08em;color:#8f8f96;padding:11px 13px 4px}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;padding:10px 11px;border-radius:12px}
+.row.w{background:rgba(242,179,61,.09);box-shadow:inset 0 0 0 1px rgba(242,179,61,.3)}
+.ri{grid-row:span 2;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;position:relative}.ri svg{width:19px;height:19px}
+.ri.w{background:rgba(242,179,61,.16)}.ri.t{background:rgba(224,122,90,.16)}.ri.d{background:rgba(79,213,138,.14)}
+.ri .mk{border-color:#1c1c1f}
+.row b{font-weight:600}.row .t{font-family:var(--mono);font-size:12px;color:#9b9ba1}
+.row small{grid-column:2/4;color:#9b9ba1;font-size:12.5px}.row .cta{grid-column:2/4;color:#ffe2a1;font-size:12px;margin-top:3px}
+.sep{height:1px;background:rgba(255,255,255,.07);margin:6px 8px}
+.act{padding:10px 13px;color:#d6d6da;display:flex;justify-content:space-between;align-items:center}
+.sw{width:34px;height:19px;border-radius:10px;background:var(--o);position:relative}.sw::after{content:"";position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff}
+.cred{text-align:center;font-size:11.5px;color:#6f6f75;padding:9px 0 7px;border-top:1px solid rgba(255,255,255,.07)}.cred b{color:#b4b4ba;font-weight:600}
+
+/* states grid */
+.grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.tile{background:#0b0b0d;border-radius:20px;padding:34px 30px 28px;display:flex;flex-direction:column;gap:26px;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+.tile .badge{zoom:1.4;align-self:flex-start}
+.tile h3{margin:0;font-size:22px}.tile p{margin:6px 0 0;color:#a9a39e;font-size:16px;line-height:1.5}
+
+/* ip safety + blocked */
+.badge.red{background:#d63b35}.badge.red .mk{background:#fff;color:#d63b35;border-color:#d63b35}
+.ips{border-top:1px solid rgba(255,255,255,.07);margin-top:6px;padding:8px 6px 4px}
+.ips .h{display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;letter-spacing:.08em;color:#8f8f96;padding:4px 7px 8px}
+.ipc{display:flex;gap:12px;align-items:center;background:#252528;border-radius:12px;padding:11px}
+.ipc.bad{background:rgba(255,99,82,.08);box-shadow:inset 0 0 0 1px rgba(255,99,82,.4)}
+.ipc .f{font-size:21px;width:32px;text-align:center}.ipc b{display:block;font-size:14.5px}.ipc small{font-family:var(--mono);font-size:12px;color:#9b9ba1}
+.pill{margin-left:auto;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:rgba(79,213,138,.14);color:#8ff0b7}.pill.bad{background:rgba(255,99,82,.16);color:#ff9a8c}
+.ipn{font-size:12.5px;color:#9b9ba1;padding:8px 6px 2px}
+.alert{position:absolute;top:48px;right:14px;width:410px;background:#1d1919;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);font-size:14.5px}
+.at{background:linear-gradient(135deg,#d63b35,#b32a25);padding:16px;display:flex;gap:12px;align-items:center}
+.at .lg svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ab{padding:17px 17px 6px;display:flex;flex-direction:column;gap:13px}.ab h4{margin:0;font-size:17.5px;color:#fff}.ab p{margin:0;color:#d4cbc8;line-height:1.55}
+.ab .lh{font-size:11.5px;font-weight:600;letter-spacing:.08em;color:#958c89}
+.ar{display:flex;gap:10px;align-items:center;font-size:14px}.ar i{width:18px;height:18px;border-radius:5px;background:rgba(255,99,82,.18);color:#ff8f82;display:grid;place-items:center;font-style:normal;font-size:9px}.ar span{margin-left:auto;font-size:12px;color:#958c89}
+.aa{display:flex;gap:9px;padding:14px 17px 16px}.aa div{flex:1;text-align:center;border-radius:12px;padding:11px 0;font-weight:600;font-size:14px}
+.aa .o{box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}.aa .w{background:#fff;color:#b32a25}
+
+/* Persian */
+@font-face{font-family:"Lahzeh";src:url(../../fonts/Lahzeh-FamilyVF.woff2) format("woff2");font-weight:100 900}
+body.fa .scene{direction:rtl}
+body.fa .desk,body.fa .tile .badge{direction:ltr}
+body.fa .copy,body.fa .tile h3,body.fa .tile p{font-family:"Lahzeh","IRANSansX",sans-serif}
+body.fa .eyebrow{letter-spacing:0;font-size:17px;font-weight:600;text-transform:none}
+body.fa h1{font-size:64px;line-height:1.25;letter-spacing:0;font-weight:800}
+body.fa .lead{font-size:21px;line-height:1.85;max-width:28ch}
+body.fa .points li{font-size:19px}
+body.fa .tile h3{font-size:24px;font-weight:700}body.fa .tile p{font-size:17px;line-height:1.7}
+body.fa .foot{left:auto;right:110px;font-family:"Lahzeh",sans-serif;letter-spacing:0;font-size:15px}
+</style>
+</head>
+<body>
+
+<template id="logo"><svg viewBox="0 0 100 100"><path fill="FILL" d="m19.6 66.5 19.7-11 .3-1-.3-.5h-1l-3.3-.2-11.2-.3L14 53l-9.5-.5-2.4-.5L0 49l.2-1.5 2-1.3 2.9.2 6.3.5 9.5.6 6.9.4L38 49.1h1.6l.2-.7-.5-.4-.4-.4L29 41l-10.6-7-5.6-4.1-3-2-1.5-2-.6-4.2 2.7-3 3.7.3.9.2 3.7 2.9 8 6.1L37 36l1.5 1.2.6-.4.1-.3-.7-1.1L33 25l-6-10.4-2.7-4.3-.7-2.6c-.3-1-.4-2-.4-3l3-4.2L28 0l4.2.6L33.8 2l2.6 6 4.1 9.3L47 29.9l2 3.8 1 3.4.3 1h.7v-.5l.5-7.2 1-8.7 1-11.2.3-3.2 1.6-3.8 3-2L61 2.6l2 2.9-.3 1.8-1.1 7.7L59 27.1l-1.5 8.2h.9l1-1.1 4.1-5.4 6.9-8.6 3-3.5L77 13l2.3-1.8h4.3l3.1 4.7-1.4 4.9-4.4 5.6-3.7 4.7-5.3 7.1-3.2 5.7.3.4h.7l12-2.6 6.4-1.1 7.6-1.3 3.5 1.6.4 1.6-1.4 3.4-8.2 2-9.6 2-14.3 3.3-.2.1.2.3 6.4.6 2.8.2h6.8l12.6 1 3.3 2 1.9 2.7-.3 2-5.1 2.6-6.8-1.6-16-3.8-5.4-1.3h-.8v.4l4.6 4.5 8.3 7.5L89 80.1l.5 2.4-1.3 2-1.4-.2-9.2-7-3.6-3-8-6.8h-.5v.7l1.8 2.7 9.8 14.7.5 4.5-.7 1.4-2.6 1-2.7-.6-5.8-8-6-9-4.7-8.2-.5.4-2.9 30.2-1.3 1.5-3 1.2-2.5-2-1.4-3 1.4-6.2 1.6-8 1.3-6.4 1.2-7.9.7-2.6v-.2H49L43 72l-9 12.3-7.2 7.6-1.7.7-3-1.5.3-2.8L24 86l10-12.8 6-7.9 4-4.6-.1-.5h-.3L17.2 77.4l-4.7.6-2-2 .2-3 1-1 8-5.5Z"/></svg></template>
+
+<!-- 1. hero -->
+<section class="scene" id="hero">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Claude Status for GNOME</span>
+    <h1>Know what Claude is doing, <em>without looking.</em></h1>
+    <p class="lead">A badge in your top bar that shows when Claude Code is thinking, needs your approval, or is done.</p>
+    <ul class="points"><li><i>✓</i>Approve requests right from the top bar</li><li><i>✓</i>Every session, project and model at a glance</li><li><i>✓</i>Translate questions to Persian with one click</li></ul>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_WAIT]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    [CARD_PERM]
+  </div>
+  <div class="foot">Open source · GNOME 45–49 · <b>github.com/mohammad-mohammad-soltani</b></div>
+</section>
+
+<!-- 2. states -->
+<section class="scene" id="states">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Four states</span>
+    <h1>One glance <em>tells you everything.</em></h1>
+    <p class="lead">The badge lives next to your clock. It shows the project, the model and how long Claude has been working.</p>
+  </div>
+  <div class="grid">
+    <div class="tile">[B_THINK]<div><h3>Thinking</h3><p>The Claude mark breathes while a timer counts the turn.</p></div></div>
+    <div class="tile">[B_WAIT]<div><h3>Needs approval</h3><p>An amber dot, and the request card drops open.</p></div></div>
+    <div class="tile">[B_DONE]<div><h3>Done</h3><p>A green check, so you know it's your turn.</p></div></div>
+    <div class="tile">[B_IDLE]<div><h3>Idle</h3><p>Just the Claude mark. Quiet when nothing runs.</p></div></div>
+  </div>
+</section>
+
+<!-- 3. approve -->
+<section class="scene" id="approve">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Approve from anywhere</span>
+    <h1>Allow or deny <em>without switching windows.</em></h1>
+    <p class="lead">When Claude asks for permission, a card drops out of the badge with the exact command. Answer it there, or hand it back to the terminal.</p>
+    <ul class="points"><li><i>1</i>Allow, Always allow or Deny</li><li><i>2</i>Falls back to the terminal after 60 s</li><li><i>3</i>Works with every Claude Code session</li></ul>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_WAIT]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    [CARD_PERM]
+  </div>
+</section>
+
+<!-- 4. translate -->
+<section class="scene" id="translate">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Built-in translation</span>
+    <h1>Questions in <em>your language.</em></h1>
+    <p class="lead">One tap translates Claude's question and its options to Persian, right to left, set in IRANSansX. Powered by Claude Haiku on your own machine.</p>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_WAIT]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    <div class="card"><div class="top"><span class="lg">[LOGO_W]</span><div class="ttl"><b>Claude is asking you</b><small>meydan · Opus 5.5</small></div><span class="tr on">EN</span><span class="x">✕</span></div>
+      <div class="body"><span class="tool">QUESTION</span>
+        <p class="q fa">بج اسم فایلی را که Claude در حال ویرایش آن است نشان دهد یا فقط نام ابزار را؟</p>
+        <div class="opts"><div class="opt fa"><span>1</span>اسم فایل نشان داده شود</div><div class="opt fa"><span>2</span>فقط نام ابزار</div><div class="opt fa"><span>3</span>هر دو نشان داده شوند</div></div></div>
+      <div class="acts"><div class="p">Answer in terminal</div></div><div class="cf"><span>Reply in the terminal</span></div></div>
+  </div>
+</section>
+
+<!-- 5. sessions -->
+<section class="scene" id="sessions">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] All your sessions</span>
+    <h1>Many projects, <em>one place.</em></h1>
+    <p class="lead">Click the badge to see every Claude Code session: what needs you, what's still working and what just finished.</p>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_WAIT3]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    <div class="panel">
+      <div class="ph">[LOGO_C]<div><b>Claude Code</b><small>3 sessions, 2 active</small></div></div>
+      <div class="chips"><span class="chip c1"><i></i>1 needs you</span><span class="chip c2"><i></i>1 working</span><span class="chip c3"><i></i>1 done</span></div>
+      <div class="grp">NEEDS YOU</div>
+      <div class="row w"><span class="ri w">[LOGO_C]<span class="mk w">!</span></span><b>meydan</b><span class="t">0:08</span><small>Bash  npm run build  ·  Opus 5.5</small><span class="cta">Click to answer →</span></div>
+      <div class="grp">WORKING</div>
+      <div class="row"><span class="ri t">[LOGO_C]</span><b>meydan-backend</b><span class="t">2:14</span><small>Edit  app/Http/Kernel.php  ·  Sonnet 5.5</small></div>
+      <div class="grp">FINISHED</div>
+      <div class="row"><span class="ri d">[LOGO_C]<span class="mk d">✓</span></span><b>system-claude</b><span class="t">4m ago</span><small>Finished in 3m 12s  ·  Opus 5.5</small></div>
+      <div class="sep"></div>
+      <div class="act">Pop up requests automatically <span class="sw"></span></div>
+      <div class="act">Clear finished</div>
+      <div class="cred">Powered by <b>mohammad mohammad soltani</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. ip safety -->
+<section class="scene" id="ipsafety">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Claude IP Safety</span>
+    <h1>Know where Claude <em>sees you from.</em></h1>
+    <p class="lead">The panel shows your public IP, its location and whether Claude is available there. It checks again every five minutes and whenever your network changes.</p>
+    <ul class="points"><li><i>✓</i>Two independent lookups, so one bad answer can't trip it</li><li><i>✓</i>Turn automatic pausing on or off</li></ul>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_THINK]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    <div class="panel" style="right:100px">
+      <div class="ph">[LOGO_C]<div><b>Claude Code</b><small>2 sessions, 1 active</small></div></div>
+      <div class="chips"><span class="chip c2"><i></i>1 working</span><span class="chip c3"><i></i>1 done</span></div>
+      <div class="grp">WORKING</div>
+      <div class="row"><span class="ri t">[LOGO_C]</span><b>meydan</b><span class="t">1:07</span><small>Edit  app/page.tsx  ·  Opus 5.5</small></div>
+      <div class="grp">FINISHED</div>
+      <div class="row"><span class="ri d">[LOGO_C]<span class="mk d">✓</span></span><b>meydan-backend</b><span class="t">6m ago</span><small>Finished in 2m 40s  ·  Sonnet 5.5</small></div>
+      <div class="ips"><div class="h"><span>CLAUDE IP SAFETY</span><span>↻</span></div>
+        <div class="ipc"><span class="f">🇳🇱</span><div><b>Amsterdam, Netherlands</b><small>203.0.113.24 · Example ISP</small></div><span class="pill ok">● Supported</span></div>
+        <div class="ipn">Claude is available in this region.</div></div>
+      <div class="act">Pause sessions on unsupported IP <span class="sw"></span></div>
+      <div class="cred">Powered by <b>mohammad mohammad soltani</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. paused -->
+<section class="scene" id="paused">
+  <div class="copy">
+    <span class="eyebrow">[LOGO_C] Account protection</span>
+    <h1>Paused <em>before it's a problem.</em></h1>
+    <p class="lead">If your IP lands in a region Claude doesn't support, every Claude Code session is paused on the spot. Nothing is lost: continue when you're ready and each session picks up where it stopped.</p>
+  </div>
+  <div class="desk">
+    <div class="bar"><span class="ws"><i class="on"></i><i></i><i></i></span><span class="clock">Fri 14:32</span>
+      <div class="right">[B_RED]<span class="sys"><span></span><span></span><span></span></span></div></div>
+    <div class="alert"><div class="at"><span class="lg"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M12 8v5M12 16.5v.01"/></svg></span><div class="ttl"><b>All sessions paused</b><small>Claude IP Safety</small></div><span class="x">✕</span></div>
+      <div class="ab"><h4>Your IP address isn't supported by Claude</h4>
+        <div class="ipc bad"><span class="f">🇮🇷</span><div><b>Tehran, Iran</b><small>198.51.100.7 · Example ISP</small></div><span class="pill bad">● Unsupported</span></div>
+        <p>Using Claude from an unsupported region can get your account banned. To protect it, every Claude Code session was paused.</p>
+        <span class="lh">PAUSED</span>
+        <div class="ar"><i>■</i>meydan<span>was working</span></div><div class="ar"><i>■</i>meydan-backend<span>was finished</span></div></div>
+      <div class="aa"><div class="o">Dismiss and continue</div><div class="w">Check again</div></div></div>
+  </div>
+</section>
+
+<script>
+const L=document.getElementById('logo').innerHTML;
+const W=L.replace('FILL','#ffffff'),C=L.replace('FILL','#d97757');
+const badge=(s,{t='',c=''}={})=>{
+  const mk=s==='wait'?'<span class="mk w">!</span>':s==='done'?'<span class="mk d">✓</span>':'';
+  if(s==='idle')return `<span class="badge idle"><span class="icon">${W}</span></span>`;
+  const st={think:'Thinking',wait:'Approve',done:'Done'}[s];
+  return `<span class="badge"><span class="icon">${W}${mk}</span><span class="st">${st}</span><span class="pj">meydan</span><span class="md">Opus 5.5</span>${t?`<span class="tm">${t}</span>`:''}${c?`<span class="ct">${c}</span>`:''}</span>`;
+};
+const card=`<div class="card"><div class="top"><span class="lg">${W}</span><div class="ttl"><b>Permission needed</b><small>meydan · Opus 5.5</small></div><span class="tr">فا</span><span class="x">✕</span></div>
+  <div class="body"><span class="tool">BASH</span><p class="q">Build the app and run the test suite</p><div class="cmd">npm run build &amp;&amp; npm test</div><span class="cwd">~/Desktop/meydan</span></div>
+  <div class="acts"><div class="g">Deny</div><div class="s">Always allow</div><div class="p">Allow</div></div>
+  <div class="cf"><span>Answer here or in the terminal</span><b>Use terminal →</b></div><div class="pb"><i></i></div></div>`;
+const map={'[LOGO_W]':W,'[LOGO_C]':C,'[B_WAIT]':badge('wait'),'[B_WAIT3]':badge('wait',{c:3}),'[B_THINK]':badge('think',{t:'1:07'}),
+  '[B_RED]':`<span class="badge red"><span class="icon">${W}<span class="mk">!</span></span><span class="st">Blocked</span><span class="pj">Unsupported IP</span><span class="md">Opus 5.5</span></span>`,'[B_DONE]':badge('done'),'[B_IDLE]':badge('idle'),'[CARD_PERM]':card};
+let h=document.body.innerHTML;for(const k in map)h=h.split(k).join(map[k]);document.body.innerHTML=h;
+const FA={
+ hero:`<span class="eyebrow">${C} Claude Status برای گنوم</span><h1>بدانید Claude چه می‌کند، <em>بدون اینکه نگاه کنید.</em></h1><p class="lead">بجی در نوار بالای سیستم که نشان می‌دهد Claude Code در حال فکر کردن است، منتظر اجازهٔ شماست یا کارش تمام شده.</p><ul class="points"><li><i>✓</i>تأیید درخواست‌ها از همان نوار بالا</li><li><i>✓</i>همهٔ جلسه‌ها، پروژه‌ها و مدل‌ها در یک نگاه</li><li><i>✓</i>ترجمهٔ فارسی سؤال‌ها با یک کلیک</li></ul>`,
+ states:`<span class="eyebrow">${C} چهار وضعیت</span><h1>یک نگاه، <em>همه‌چیز را می‌گوید.</em></h1><p class="lead">بج کنار ساعت می‌نشیند و پروژه، مدل و مدت زمان کار Claude را نشان می‌دهد.</p>`,
+ approve:`<span class="eyebrow">${C} تأیید از هر جا</span><h1>اجازه بدهید یا رد کنید، <em>بدون عوض کردن پنجره.</em></h1><p class="lead">وقتی Claude اجازه می‌خواهد، کارتی با دستور دقیق از دل بج باز می‌شود. همان‌جا جواب بدهید یا تصمیم را به ترمینال بسپارید.</p><ul class="points"><li><i>۱</i>اجازه، همیشه مجاز یا رد</li><li><i>۲</i>بعد از ۶۰ ثانیه به ترمینال برمی‌گردد</li><li><i>۳</i>با همهٔ جلسه‌های Claude Code کار می‌کند</li></ul>`,
+ translate:`<span class="eyebrow">${C} ترجمهٔ داخلی</span><h1>سؤال‌ها <em>به زبان خودتان.</em></h1><p class="lead">با یک کلیک، سؤال Claude و گزینه‌هایش راست‌چین به فارسی ترجمه می‌شوند؛ با مدل Haiku و روی همین سیستم.</p>`,
+ sessions:`<span class="eyebrow">${C} همهٔ جلسه‌ها</span><h1>چند پروژه، <em>یک جا.</em></h1><p class="lead">روی بج کلیک کنید تا همهٔ جلسه‌های Claude Code را ببینید: کدام منتظر شماست، کدام هنوز کار می‌کند و کدام تمام شده.</p>`,
+ ipsafety:`<span class="eyebrow">${C} Claude IP Safety</span><h1>بدانید Claude <em>شما را کجا می‌بیند.</em></h1><p class="lead">پنل، IP عمومی، موقعیت آن و در دسترس بودن Claude در آن منطقه را نشان می‌دهد. هر پنج دقیقه و با هر تغییر شبکه دوباره بررسی می‌شود.</p><ul class="points"><li><i>✓</i>دو سرویس مستقل، تا یک جواب اشتباه کار را متوقف نکند</li><li><i>✓</i>توقف خودکار را روشن یا خاموش کنید</li></ul>`,
+ paused:`<span class="eyebrow">${C} محافظت از حساب</span><h1>متوقف می‌شود <em>پیش از آنکه دیر شود.</em></h1><p class="lead">اگر IP شما در منطقه‌ای باشد که Claude پشتیبانی نمی‌کند، همهٔ جلسه‌ها همان لحظه متوقف می‌شوند. چیزی از دست نمی‌رود؛ هر وقت خواستید ادامه بدهید و هر جلسه از همان‌جا جلو می‌رود.</p>`,
+};
+const FA_TILES=[['در حال فکر','نشان Claude نفس می‌کشد و زمان‌سنج، مدت کار را می‌شمارد.'],['منتظر اجازه','یک نقطهٔ کهربایی، و کارت درخواست باز می‌شود.'],['تمام شد','یک تیک سبز، تا بدانید نوبت شماست.'],['بیکار','فقط نشان Claude؛ وقتی چیزی اجرا نمی‌شود، آرام است.']];
+if(/[?&]lang=fa/.test(location.search)){
+  document.documentElement.lang='fa';document.body.classList.add('fa');
+  for(const k in FA){const c=document.querySelector('#'+k+' .copy');if(c)c.innerHTML=FA[k]}
+  document.querySelectorAll('#states .tile').forEach((t,i)=>{t.querySelector('h3').textContent=FA_TILES[i][0];t.querySelector('p').textContent=FA_TILES[i][1]});
+  const f=document.querySelector('#hero .foot');if(f)f.innerHTML='متن‌باز · گنوم ۴۵ تا ۴۹ · <b>github.com/mohammad-mohammad-soltani</b>';
+}
+const id=(location.hash||'#hero').slice(1);document.getElementById(id).classList.add('on');
+</script>
+</body>
+</html>

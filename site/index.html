@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Status for GNOME</title>
+<meta name="description" content="A GNOME top-bar badge for Claude Code: see when Claude is thinking, needs approval or is done, and approve requests from the top bar.">
+<meta property="og:title" content="Claude Status for GNOME">
+<meta property="og:description" content="Know what Claude is doing, without looking.">
+<meta property="og:image" content="images/hero.png">
+<link rel="icon" href="images/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono&family=Vazirmatn:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#0f0d10;--panel:#18151a;--line:rgba(255,255,255,.08);--ink:#f4f1ee;--sub:#aaa29c;--o:#e06a35;--o2:#ea7843;
+  --ui:"Ubuntu",system-ui,sans-serif;--fa:"Vazirmatn","Ubuntu",sans-serif;--mono:"Ubuntu Mono",ui-monospace,monospace}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);line-height:1.6;
+  background-image:radial-gradient(900px 600px at 85% -10%,rgba(224,106,53,.22),transparent 60%),radial-gradient(800px 600px at -10% 40%,rgba(120,50,90,.22),transparent 60%)}
+html[lang=fa] body{font-family:var(--fa)}
+a{color:var(--o2);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-left))}
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:var(--ink)}
+.brand img{width:30px;height:30px}
+.nav-r{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:11px 22px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;text-decoration:none!important}
+.btn.p{background:var(--o);color:#fff}.btn.p:hover{background:var(--o2)}
+.btn.g{background:rgba(255,255,255,.07);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}.btn.g:hover{background:rgba(255,255,255,.12)}
+.btn.s{padding:8px 15px;font-size:13.5px}
+.hero{padding:48px 0 30px;text-align:center}
+.eyebrow{display:inline-block;color:#f3a27c;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
+html[lang=fa] .eyebrow{letter-spacing:0;text-transform:none;font-size:15px}
+h1{font-size:clamp(38px,6.4vw,72px);line-height:1.05;margin:14px auto 18px;max-width:14ch;letter-spacing:-.02em;text-wrap:balance}
+html[lang=fa] h1{line-height:1.3;letter-spacing:0;font-weight:800}
+h1 em{font-style:normal;color:var(--o2)}
+.lead{font-size:clamp(17px,2vw,20px);color:#cfc8c2;max-width:56ch;margin:0 auto 28px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.meta{color:var(--sub);font-size:13.5px;margin-top:16px}
+.shot{margin:44px auto 0;border-radius:18px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px var(--line)}
+.shot img{display:block;width:100%;height:auto}
+section{padding:70px 0 10px}
+h2{font-size:clamp(28px,3.6vw,40px);margin:0 0 10px;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--sub);max-width:60ch;margin:0 0 30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:22px}
+.card{background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.card img{display:block;width:100%;height:auto;border-bottom:1px solid var(--line)}
+.card div{padding:18px 20px 20px}
+.card h3{margin:0 0 4px;font-size:18px}.card p{margin:0;color:var(--sub);font-size:15px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px}
+.step{background:var(--panel);border-radius:16px;padding:22px;box-shadow:0 0 0 1px var(--line);min-width:0}
+.step b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:rgba(224,106,53,.18);color:#f3a27c;margin-bottom:10px}
+.step h3{margin:0 0 6px;font-size:17px}.step p{margin:0 0 10px;color:var(--sub);font-size:14.5px}
+pre{margin:0;background:#0b0a0c;border-radius:10px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:14px;color:#f1ebe6;direction:ltr;text-align:left}
+.wiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin-top:22px}
+.wiz img{width:100%;height:auto;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.4),0 0 0 1px var(--line)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+.tbl{overflow-x:auto;background:var(--panel);border-radius:14px;box-shadow:0 0 0 1px var(--line)}
+td,th{padding:12px 16px;border-bottom:1px solid var(--line);text-align:start}th{color:var(--sub);font-weight:500}
+tr:last-child td{border-bottom:0}
+footer{padding:60px 0 50px;color:var(--sub);font-size:14px;text-align:center}
+footer .tm{font-size:12.5px;opacity:.7;margin-top:8px}
+.lang{font-family:var(--fa)}
+:focus-visible{outline:2px solid var(--o2);outline-offset:3px}
+@media (max-width:560px){.nav-r .gh{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><img src="images/icon.svg" alt="">Claude Status</a>
+    <div class="nav-r">
+      <button class="btn g s lang" id="lang" type="button">فارسی</button>
+      <a class="btn g s gh" href="https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="eyebrow" data-i="eyebrow">For Claude Code on GNOME</span>
+    <h1 data-i="h1">Know what Claude is doing, <em>without looking.</em></h1>
+    <p class="lead" data-i="lead">A badge in your top bar that shows when Claude Code is thinking, needs your approval, or is done. Approve requests right there, and keep every session in view.</p>
+    <div class="cta">
+      <a class="btn p" href="https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools/releases/latest" data-i="dl">Download .deb</a>
+      <a class="btn g" href="#install" data-i="how">Install guide</a>
+    </div>
+    <p class="meta" data-i="meta">Free and open source · GNOME 45–49 · Ubuntu, Fedora, Debian, Arch</p>
+    <div class="shot"><img data-img="hero" src="images/hero.png" alt="Claude Status badge and approval card in the GNOME top bar" width="1600" height="900"></div>
+  </header>
+
+  <section>
+    <h2 data-i="fh">Everything at a glance</h2>
+    <p class="sub" data-i="fs">Built for people who run Claude Code in the background and want to know the moment it needs them.</p>
+    <div class="grid">
+      <div class="card"><img data-img="states" src="images/states.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c1h">Four clear states</h3><p data-i="c1p">Thinking, needs approval, done or idle, with the project, the model and a timer.</p></div></div>
+      <div class="card"><img data-img="approve" src="images/approve.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c2h">Approve from the top bar</h3><p data-i="c2p">Allow, Always allow or Deny the exact command without switching windows.</p></div></div>
+      <div class="card"><img data-img="sessions" src="images/sessions.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c3h">Every session in one place</h3><p data-i="c3p">What needs you, what's working and what just finished, across all your projects.</p></div></div>
+      <div class="card"><img data-img="translate" src="images/translate.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c4h">Persian translation</h3><p data-i="c4p">One tap translates Claude's question and its options, right to left, using Claude Haiku on your machine.</p></div></div>
+      <div class="card"><img data-img="ipsafety" src="images/ipsafety.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c5h">Claude IP Safety</h3><p data-i="c5p">See your IP's location and whether Claude is available there.</p></div></div>
+      <div class="card"><img data-img="paused" src="images/paused.png" alt="" loading="lazy" width="1600" height="900"><div><h3 data-i="c6h">Paused before it's a problem</h3><p data-i="c6p">On an unsupported IP every session is paused, and resumes exactly where it stopped.</p></div></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2 data-i="ih">Install in a minute</h2>
+    <p class="sub" data-i="is">On Ubuntu and Debian, use the package and its setup app. Everywhere else, use the script.</p>
+    <div class="steps">
+      <div class="step"><b>1</b><h3 data-i="s1h">Install the package</h3><p data-i="s1p">Download the .deb from Releases and double-click it, or run:</p><pre>sudo apt install ./claude-status_*_all.deb</pre></div>
+      <div class="step"><b>2</b><h3 data-i="s2h">Run the setup app</h3><p data-i="s2p">Open “Claude Status” from your apps. It checks your system and connects everything to Claude Code.</p></div>
+      <div class="step"><b>3</b><h3 data-i="s3h">Log out and back in</h3><p data-i="s3p">The badge appears next to your clock. Restart any open Claude Code sessions.</p></div>
+    </div>
+    <div class="wiz">
+      <img src="images/setup-welcome.png" alt="Setup: welcome" loading="lazy" width="660" height="780">
+      <img src="images/setup-check.png" alt="Setup: system check" loading="lazy" width="660" height="780">
+      <img src="images/setup-options.png" alt="Setup: options" loading="lazy" width="660" height="780">
+      <img src="images/setup-done.png" alt="Setup: done" loading="lazy" width="660" height="780">
+    </div>
+    <h3 style="margin:36px 0 10px" data-i="oh">Fedora, Arch, openSUSE and others</h3>
+    <pre>git clone https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools.git
+cd ClaudeAddonTools
+./install.sh</pre>
+  </section>
+
+  <section>
+    <h2 data-i="rh">Requirements</h2>
+    <div class="tbl"><table>
+      <tr><th data-i="r1">Desktop</th><td>GNOME Shell 45, 46, 47, 48, 49 (Wayland / X11)</td></tr>
+      <tr><th>Claude Code</th><td data-i="r2v">CLI, or the VS Code / Cursor extension</td></tr>
+      <tr><th data-i="r3">Distributions</th><td>Ubuntu 24.04+, Fedora 39+, Debian 13+, Arch, openSUSE Tumbleweed, Pop!_OS, Zorin</td></tr>
+    </table></div>
+  </section>
+
+  <footer>
+    <div><span data-i="by">Powered by</span> <a href="https://github.com/mohammad-mohammad-soltani">mohammad mohammad soltani</a> · <a href="https://github.com/mohammad-mohammad-soltani/ClaudeAddonTools/blob/main/LICENSE">MIT</a></div>
+    <div class="tm" data-i="tm">Claude and the Claude logo are trademarks of Anthropic. This is an independent community project, not affiliated with or endorsed by Anthropic.</div>
+  </footer>
+</div>
+
+<script>
+const FA={eyebrow:'برای Claude Code روی گنوم',h1:'بدانید Claude چه می‌کند، <em>بدون اینکه نگاه کنید.</em>',
+lead:'بجی در نوار بالای سیستم که نشان می‌دهد Claude Code در حال فکر کردن است، منتظر اجازهٔ شماست یا کارش تمام شده. درخواست‌ها را همان‌جا تأیید کنید و همهٔ جلسه‌ها را زیر نظر داشته باشید.',
+dl:'دانلود بستهٔ deb',how:'راهنمای نصب',meta:'رایگان و متن‌باز · گنوم ۴۵ تا ۴۹ · اوبونتو، فدورا، دبیان، آرچ',
+fh:'همه‌چیز در یک نگاه',fs:'برای کسانی که Claude Code را در پس‌زمینه اجرا می‌کنند و می‌خواهند همان لحظه که به آن‌ها نیاز دارد باخبر شوند.',
+c1h:'چهار وضعیت روشن',c1p:'در حال فکر، منتظر اجازه، تمام شد یا بیکار؛ همراه با پروژه، مدل و زمان‌سنج.',
+c2h:'تأیید از نوار بالا',c2p:'دستور دقیق را بدون عوض کردن پنجره مجاز، همیشه مجاز یا رد کنید.',
+c3h:'همهٔ جلسه‌ها یک‌جا',c3p:'کدام منتظر شماست، کدام کار می‌کند و کدام تمام شده؛ در همهٔ پروژه‌ها.',
+c4h:'ترجمهٔ فارسی',c4p:'با یک کلیک، سؤال Claude و گزینه‌هایش راست‌چین ترجمه می‌شوند؛ با Claude Haiku روی سیستم خودتان.',
+c5h:'Claude IP Safety',c5p:'موقعیت IP خود و در دسترس بودن Claude در آن را ببینید.',
+c6h:'توقف پیش از آنکه دیر شود',c6p:'روی IP غیرمجاز همهٔ جلسه‌ها متوقف می‌شوند و دقیقاً از همان‌جا ادامه پیدا می‌کنند.',
+ih:'نصب در یک دقیقه',is:'روی اوبونتو و دبیان از بسته و برنامهٔ نصب آن استفاده کنید؛ روی بقیهٔ توزیع‌ها از اسکریپت.',
+s1h:'نصب بسته',s1p:'فایل deb را از بخش Releases دانلود کنید و رویش دوبار کلیک کنید، یا این دستور را بزنید:',
+s2h:'اجرای برنامهٔ نصب',s2p:'«Claude Status» را از منوی برنامه‌ها باز کنید. سیستم را بررسی می‌کند و همه‌چیز را به Claude Code وصل می‌کند.',
+s3h:'خروج و ورود دوباره',s3p:'بج کنار ساعت ظاهر می‌شود. جلسه‌های باز Claude Code را دوباره باز کنید.',
+oh:'فدورا، آرچ، openSUSE و بقیه',rh:'پیش‌نیازها',r1:'میزکار',r2v:'نسخهٔ CLI یا افزونهٔ VS Code / Cursor',r3:'توزیع‌ها',
+by:'ساخته‌شده توسط',tm:'Claude و لوگوی Claude علامت تجاری Anthropic هستند. این پروژه مستقل است و ارتباطی با Anthropic ندارد.'};
+const EN={};document.querySelectorAll('[data-i]').forEach(e=>EN[e.dataset.i]=e.innerHTML);
+function setLang(l){
+  const fa=l==='fa';document.documentElement.lang=l;document.documentElement.dir=fa?'rtl':'ltr';
+  document.querySelectorAll('[data-i]').forEach(e=>{const t=(fa?FA:EN)[e.dataset.i];if(t!=null)e.innerHTML=t});
+  document.querySelectorAll('[data-img]').forEach(i=>i.src=`images/${fa?'fa/':''}${i.dataset.img}.png`);
+  document.getElementById('lang').textContent=fa?'English':'فارسی';
+  try{localStorage.setItem('lang',l)}catch(_){}
+}
+document.getElementById('lang').onclick=()=>setLang(document.documentElement.lang==='fa'?'en':'fa');
+let saved=null;try{saved=localStorage.getItem('lang')}catch(_){}
+if(saved==='fa'||(!saved&&/^fa\b/.test(navigator.language||'')))setLang('fa');
+</script>
+</body>
+</html>

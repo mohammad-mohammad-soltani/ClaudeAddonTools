@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Status
+GenericName=Claude Code status badge
+Comment=Set up the Claude Code badge for your top bar
+Exec=claude-status-setup
+Icon=io.github.mohammad_soltani.ClaudeStatus
+Terminal=false
+Categories=Utility;Development;GTK;
+Keywords=Claude;Anthropic;AI;Status;Badge;Top bar;
+StartupNotify=true

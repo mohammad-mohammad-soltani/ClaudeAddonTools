@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Status Setup
+Comment=Finish setting up Claude Status
+Exec=claude-status-setup --first-run
+Icon=io.github.mohammad_soltani.ClaudeStatus
+OnlyShowIn=GNOME;ubuntu:GNOME;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
